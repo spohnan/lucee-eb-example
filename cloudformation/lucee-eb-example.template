@@ -45,7 +45,7 @@ Resources:
       Description: AWS ElasticBeanstalk Sample Application Version
       SourceBundle:
         S3Bucket: !Ref BucketName
-        S3Key: !Sub '${KeyPrefix}/lucee-eb-example.zip'
+        S3Key: !Sub '${KeyPrefix}/lucee-eb-example-beanstalk.zip'
   LuceeAppConfigTemplate:
     Type: 'AWS::ElasticBeanstalk::ConfigurationTemplate'
     Properties:
