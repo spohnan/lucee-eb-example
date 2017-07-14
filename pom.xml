@@ -1,0 +1,64 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>com.andyspohn</groupId>
+    <artifactId>lucee-eb-example</artifactId>
+    <version>0.0.1</version>
+    <name>Lucee Elastic Beanstalk Example</name>
+    <packaging>war</packaging>
+
+    <properties>
+        <lucee.version>5.1.2.24</lucee.version>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.lucee</groupId>
+            <artifactId>lucee</artifactId>
+            <version>${lucee.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.lucee</groupId>
+            <artifactId>lucee.bundlewar</artifactId>
+            <version>${lucee.version}</version>
+            <type>zip</type>
+        </dependency>
+    </dependencies>
+
+    <repositories>
+        <repository>
+            <id>cfmlprojects</id>
+            <url>http://cfmlprojects.org/artifacts</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </repository>
+    </repositories>
+
+    <build>
+        <finalName>${project.artifactId}</finalName>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-war-plugin</artifactId>
+                <version>3.1.0</version>
+                <configuration>
+                    <failOnMissingWebXml>false</failOnMissingWebXml>
+                    <overlays>
+                        <overlay>
+                            <groupId>org.lucee</groupId>
+                            <artifactId>lucee.bundlewar</artifactId>
+                            <type>zip</type>
+                        </overlay>
+                    </overlays>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>
