@@ -1,0 +1,142 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: >-
+  Lucee Elastic Beanstalk Example
+Parameters:
+  VPCID:
+    Description: ID of the VPC
+    Type: 'AWS::EC2::VPC::Id'
+  appSubnet1:
+    Description: 'Private Subnet 1: ID of first subnet to which EB instances will be deployed'
+    Type: 'AWS::EC2::Subnet::Id'
+  appSubnet2:
+    Description: 'Private Subnet 2: ID of second subnet to which EB instances will be deployed'
+    Type: 'AWS::EC2::Subnet::Id'
+  BucketName:
+    AllowedPattern: ^[0-9a-zA-Z]+([0-9a-zA-Z-.]*[0-9a-zA-Z])*$
+    ConstraintDescription: S3 bucket containing application binary. Name can include numbers, lowercase
+      letters, uppercase letters, periods (.), and hyphens (-). It cannot start or end with a hyphen (-).
+    Default: cfn-andyspohn-com
+    Description: S3 bucket containing application binary. Name can include numbers, lowercase
+      letters, uppercase letters, periods (.), and hyphens (-). It cannot start or end with a hyphen (-).
+    Type: String
+  KeyPrefix:
+    AllowedPattern: ^[0-9a-zA-Z-]+(/[0-9a-zA-Z-]+)*$
+    ConstraintDescription: Quick Start key prefix can include numbers, lowercase letters,
+      uppercase letters, hyphens (-), and forward slash (/). It cannot start or end
+      with forward slash (/) because they are automatically appended.
+    Default: source-bundles
+    Description: S3 key prefix for the Quick Start assets. Quick Start key prefix
+      can include numbers, lowercase letters, uppercase letters, hyphens (-), and
+      forward slash (/). It cannot start or end with forward slash (/) because they
+      are automatically appended.
+    Type: String
+Resources:
+
+  # ~~~ Elastic Beanstalk Lucee Application ~~~
+
+  LuceeApp:
+    Type: 'AWS::ElasticBeanstalk::Application'
+    Properties:
+      Description: Elastic Beanstalk Lucee Application
+  LuceeAppVersion:
+    Type: 'AWS::ElasticBeanstalk::ApplicationVersion'
+    Properties:
+      ApplicationName: !Ref LuceeApp
+      Description: AWS ElasticBeanstalk Sample Application Version
+      SourceBundle:
+        S3Bucket: !Ref BucketName
+        S3Key: !Sub '${KeyPrefix}/lucee-eb-example.zip'
+  LuceeAppConfigTemplate:
+    Type: 'AWS::ElasticBeanstalk::ConfigurationTemplate'
+    Properties:
+      ApplicationName: !Ref LuceeApp
+      Description: AWS ElasticBeanstalk Sample Configuration Template
+      OptionSettings:
+      - Namespace: 'aws:autoscaling:asg'
+        OptionName: MinSize
+        Value: '1'
+      - Namespace: 'aws:autoscaling:asg'
+        OptionName: MaxSize
+        Value: '4'
+      - Namespace: 'aws:autoscaling:launchconfiguration'
+        OptionName: InstanceType
+        Value: t2.small
+      - Namespace: 'aws:elasticbeanstalk:container:tomcat:jvmoptions'
+        OptionName: Xmx
+        Value: 512m
+      - Namespace: 'aws:elasticbeanstalk:environment'
+        OptionName: EnvironmentType
+        Value: LoadBalanced
+      - Namespace: 'aws:ec2:vpc'
+        OptionName: Subnets
+        Value: !Join [',', [ !Ref appSubnet1, !Ref appSubnet2 ]]
+      - Namespace: 'aws:ec2:vpc'
+        OptionName: ELBSubnets
+        Value: !Join [',', [ !Ref appSubnet1, !Ref appSubnet2 ]]
+      - Namespace: 'aws:elasticbeanstalk:environment'
+        OptionName: LoadBalancerType
+        Value: application
+      - Namespace: 'aws:elasticbeanstalk:environment:proxy'
+        OptionName: ProxyServer
+        Value: nginx
+      - Namespace: 'aws:elasticbeanstalk:environment:proxy'
+        OptionName: GzipCompression
+        Value: true
+      - Namespace: 'aws:autoscaling:launchconfiguration'
+        OptionName: 'IamInstanceProfile'
+        Value: !Ref InstanceProfile
+      - Namespace: 'aws:elasticbeanstalk:environment'
+        OptionName: 'ServiceRole'
+        Value: !Ref ServiceRole
+      SolutionStackName: '64bit Amazon Linux 2017.03 v2.6.1 running Tomcat 8 Java 8'
+  LuceeAppEnv:
+      Type: 'AWS::ElasticBeanstalk::Environment'
+      Properties:
+        ApplicationName: !Ref LuceeApp
+        Description: AWS Elastic Beanstalk Environment running Python Sample Application
+        TemplateName: !Ref LuceeAppConfigTemplate
+        VersionLabel: !Ref LuceeAppVersion
+
+  # ~~~ Elastic Beanstalk Permissions ~~~
+
+  ServiceRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      ManagedPolicyArns:
+        - 'arn:aws:iam::aws:policy/service-role/AWSElasticBeanstalkEnhancedHealth'
+        - 'arn:aws:iam::aws:policy/service-role/AWSElasticBeanstalkService'
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          -
+            Effect: 'Allow'
+            Principal:
+              Service:
+                - 'elasticbeanstalk.amazonaws.com'
+            Action:
+              - 'sts:AssumeRole'
+            Condition:
+              StringEquals:
+                'sts:ExternalId': 'elasticbeanstalk'
+  InstanceProfile:
+    Type: 'AWS::IAM::InstanceProfile'
+    Properties:
+      Roles:
+        - !Ref InstanceRole
+  InstanceRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      ManagedPolicyArns:
+        - 'arn:aws:iam::aws:policy/AWSElasticBeanstalkWebTier'
+        - 'arn:aws:iam::aws:policy/AWSElasticBeanstalkMulticontainerDocker'
+        - 'arn:aws:iam::aws:policy/AWSElasticBeanstalkWorkerTier'
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          -
+            Effect: 'Allow'
+            Principal:
+              Service:
+                - 'ec2.amazonaws.com'
+            Action:
+              - 'sts:AssumeRole'
