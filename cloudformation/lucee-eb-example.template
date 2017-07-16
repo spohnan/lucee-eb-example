@@ -1,16 +1,49 @@
 AWSTemplateFormatVersion: 2010-09-09
 Description: >-
   Lucee Elastic Beanstalk Example
+  There is meant to be a minimalist example not a good production configuration.
+  Add your IP as the CIDR so the resources are only visible to you and deploy to your default VPC to test.
+Metadata:
+    AWS::CloudFormation::Interface:
+        ParameterGroups:
+          - Label:
+              default: Network Config
+            Parameters:
+              - VPCID
+              - appSubnet1
+              - appSubnet2
+              - myIP
+          - Label:
+              default: Quick Start Config
+            Parameters:
+              - BucketName
+              - KeyPrefix
+        ParameterLabels:
+          VPCID:
+            default: VPC ID
+          appSubnet1:
+            default: Application Subnet 1
+          appSubnet2:
+            default: Application Subnet 2
+          myIP:
+            default: My IP CIDR
+          BucketName:
+            default: S3 Bucket Name
+          KeyPrefix:
+            default: S3 Key Prefix
 Parameters:
   VPCID:
     Description: ID of the VPC
     Type: 'AWS::EC2::VPC::Id'
   appSubnet1:
-    Description: 'Private Subnet 1: ID of first subnet to which EB instances will be deployed'
+    Description: 'Subnet 1: ID of first subnet to which EB instances will be deployed'
     Type: 'AWS::EC2::Subnet::Id'
   appSubnet2:
-    Description: 'Private Subnet 2: ID of second subnet to which EB instances will be deployed'
+    Description: 'Subnet 2: ID of second subnet to which EB instances will be deployed'
     Type: 'AWS::EC2::Subnet::Id'
+  myIP:
+    Description: Google "What's my IP" and put the result along with a trailing /32 here like 100.36.200.111/32
+    Type: String
   BucketName:
     AllowedPattern: ^[0-9a-zA-Z]+([0-9a-zA-Z-.]*[0-9a-zA-Z])*$
     ConstraintDescription: S3 bucket containing application binary. Name can include numbers, lowercase
@@ -61,6 +94,9 @@ Resources:
       - Namespace: 'aws:autoscaling:launchconfiguration'
         OptionName: InstanceType
         Value: t2.small
+      - Namespace: 'aws:autoscaling:launchconfiguration'
+        OptionName: SecurityGroups
+        Value: !Ref BeanstalkInstanceSecurityGroup
       - Namespace: 'aws:elasticbeanstalk:container:tomcat:jvmoptions'
         OptionName: Xmx
         Value: 512m
@@ -76,6 +112,15 @@ Resources:
       - Namespace: 'aws:elasticbeanstalk:environment'
         OptionName: LoadBalancerType
         Value: application
+      - Namespace: 'aws:elb:loadbalancer'
+        OptionName: SecurityGroups
+        Value: !Ref ELBSecurityGroup
+      - Namespace: 'aws:elasticbeanstalk:environment:process:default'
+        OptionName: StickinessEnabled
+        Value: true
+      - Namespace: 'aws:elasticbeanstalk:environment:process:default'
+        OptionName: StickinessType
+        Value: lb_cookie
       - Namespace: 'aws:elasticbeanstalk:environment:proxy'
         OptionName: ProxyServer
         Value: nginx
@@ -140,3 +185,27 @@ Resources:
                 - 'ec2.amazonaws.com'
             Action:
               - 'sts:AssumeRole'
+
+  # ~~~ Security groups to restrict access to EB instances and load balancer ~~~
+
+  ELBSecurityGroup:
+    Type: 'AWS::EC2::SecurityGroup'
+    Properties:
+      GroupDescription: Allows access to the load balancer
+      VpcId: !Ref VPCID
+      SecurityGroupIngress:
+        IpProtocol: tcp
+        FromPort: 80
+        ToPort: 80
+        CidrIp: !Ref myIP
+
+  BeanstalkInstanceSecurityGroup:
+    Type: 'AWS::EC2::SecurityGroup'
+    Properties:
+      GroupDescription: Allows access to EB instances only from the load balancer
+      VpcId: !Ref VPCID
+      SecurityGroupIngress:
+        IpProtocol: tcp
+        FromPort: 80
+        ToPort: 80
+        SourceSecurityGroupId: !GetAtt ELBSecurityGroup.GroupId
