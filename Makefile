@@ -14,11 +14,16 @@ ifeq ($(AWS_DEFAULT_REGION),)
 	AWS_DEFAULT_REGION?=us-east-1
 endif
 
-all: push validate
+all: clean package push test tomcat-run validate
 .PHONY: all
 
+clean:
+	@mvn clean
+
+package:
+	@mvn package
+
 push:
-	@echo "pushing templates to S3"
 	@aws s3 sync . s3://$(BUCKET_NAME)/$(TEMPLATE_NAME) \
 		--delete \
 		--only-show-errors \
@@ -27,6 +32,9 @@ push:
 
 test: validate
 	@open "https://console.aws.amazon.com/cloudformation/home?region=$(AWS_DEFAULT_REGION)#/stacks/new?stackName=$(TEMPLATE_NAME)-$$(date +'%H%M%S')&templateURL=https://s3.amazonaws.com/cfn-andyspohn-com/$(TEMPLATE_NAME)/cloudformation/$(TEMPLATE_NAME).template"
+
+tomcat-run:
+	@mvn -P war-only-packaging package cargo:run
 
 validate: push
 	@aws cloudformation \
