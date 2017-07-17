@@ -34,7 +34,8 @@ test: validate
 	@open "https://console.aws.amazon.com/cloudformation/home?region=$(AWS_DEFAULT_REGION)#/stacks/new?stackName=$(TEMPLATE_NAME)-$$(date +'%H%M%S')&templateURL=https://s3.amazonaws.com/cfn-andyspohn-com/$(TEMPLATE_NAME)/cloudformation/$(TEMPLATE_NAME).template"
 
 tomcat-run:
-	@mvn -P war-only-packaging package cargo:run
+	@mvn --activate-profiles war-only-packaging install
+	@mvn --activate-profiles war-only-packaging --projects build/tomcat cargo:run
 
 validate: push
 	@aws cloudformation \

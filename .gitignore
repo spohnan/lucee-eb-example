@@ -1,6 +1,7 @@
 *.iml
 .idea/
 target/
+node_modules/
 # Elastic Beanstalk Files
 .elasticbeanstalk/*
 !.elasticbeanstalk/*.cfg.yml

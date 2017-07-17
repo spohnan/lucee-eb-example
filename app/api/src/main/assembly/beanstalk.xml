@@ -4,9 +4,10 @@
     <formats>
         <format>zip</format>
     </formats>
+    <includeBaseDirectory>false</includeBaseDirectory>
     <fileSets>
         <fileSet>
-            <directory>${project.build.directory}/${project.artifactId}</directory>
+            <directory>${project.build.directory}/api/</directory>
             <outputDirectory/>
         </fileSet>
     </fileSets>
