@@ -47,7 +47,7 @@ s3-bucket/
     └── dev
         └── 0.0.4-SNAPSHOT
             ├── cloudformation
-            └── lucee-eb-example-0.0.3-beanstalk.zip
+            └── lucee-eb-example-0.0.4-beanstalk.zip
 ```
 
 During development when `make deploy-console` is called the snapshot version will overwrite the previous copy under the 
