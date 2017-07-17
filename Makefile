@@ -37,7 +37,7 @@ endif
 
 KEY_NAME := $(TEMPLATE_NAME)$(DEV_RELEASE)/$(VERSION)
 BUILD_DIR := build/dist/target/*-deployment-bundle/
-CONSOLE_URL := https://console.aws.amazon.com/cloudformation/home?region=$(AWS_DEFAULT_REGION)#/stacks/new
+CONSOLE_URL := https://console.aws.amazon.com/cloudformation/home?region=$(AWS_DEFAULT_REGION)\#/stacks/new
 CONSOLE_ARGS := ?stackName=$(TEMPLATE_NAME)-$$(date +'%H%M%S')&templateURL=https://s3.amazonaws.com/cfn-andyspohn-com/$(KEY_NAME)/cloudformation/$(TEMPLATE_NAME).template
 
 all: clean package setup push validate deploy-console tomcat-run
@@ -91,7 +91,7 @@ deploy-console: validate
 
 #
 # Same as above but with no deployment prerequisite.
-# Meant to deploy existing versions ex: "VERSION 1.2.3 make deploy-version-console"
+# Meant to deploy existing versions ex: "VERSION=1.2.3 make deploy-version-console"
 #
 deploy-version-console:
 	@open "$(CONSOLE_URL)$(CONSOLE_ARGS)"
