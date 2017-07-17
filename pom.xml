@@ -3,7 +3,7 @@
 
     <groupId>com.andyspohn</groupId>
     <artifactId>parent</artifactId>
-    <version>0.0.3-SNAPSHOT</version>
+    <version>0.0.2-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <url>https://github.com/spohnan/lucee-eb-example</url>
