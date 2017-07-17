@@ -34,3 +34,4 @@ an environment variable before calling ex: "VERSION 0.0.1 make deploy-version-co
 * The build modules orchestrate various build functions
     * dist - Contains finished artifacts in `dist/target`
     * tomcat - Runs both apps in a local Tomcat instance
+* The cloudformation directory contains a really simple deployment script but for production we'd use [something more substantial](https://github.com/aws-quickstart/quickstart-enterprise-accelerator-nist)
