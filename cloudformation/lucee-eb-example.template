@@ -4,33 +4,35 @@ Description: >-
   There is meant to be a minimalist example not a good production configuration.
   Add your IP as the CIDR so the resources are only visible to you and deploy to your default VPC to test.
 Metadata:
-    AWS::CloudFormation::Interface:
-        ParameterGroups:
-          - Label:
-              default: Network Config
-            Parameters:
-              - VPCID
-              - appSubnet1
-              - appSubnet2
-              - myIP
-          - Label:
-              default: Quick Start Config
-            Parameters:
-              - BucketName
-              - KeyPrefix
-        ParameterLabels:
-          VPCID:
-            default: VPC ID
-          appSubnet1:
-            default: Application Subnet 1
-          appSubnet2:
-            default: Application Subnet 2
-          myIP:
-            default: My IP CIDR
-          BucketName:
-            default: S3 Bucket Name
-          KeyPrefix:
-            default: S3 Key Prefix
+  Version:
+      Value: VERSION_STRING_TOKEN
+  AWS::CloudFormation::Interface:
+      ParameterGroups:
+        - Label:
+            default: Network Config
+          Parameters:
+            - VPCID
+            - appSubnet1
+            - appSubnet2
+            - myIP
+        - Label:
+            default: Quick Start Config
+          Parameters:
+            - BucketName
+            - KeyPrefix
+      ParameterLabels:
+        VPCID:
+          default: VPC ID
+        appSubnet1:
+          default: Application Subnet 1
+        appSubnet2:
+          default: Application Subnet 2
+        myIP:
+          default: My IP CIDR
+        BucketName:
+          default: S3 Bucket Name
+        KeyPrefix:
+          default: S3 Key Prefix
 Parameters:
   VPCID:
     Description: ID of the VPC
@@ -53,11 +55,11 @@ Parameters:
       letters, uppercase letters, periods (.), and hyphens (-). It cannot start or end with a hyphen (-).
     Type: String
   KeyPrefix:
-    AllowedPattern: ^[0-9a-zA-Z-]+(/[0-9a-zA-Z-]+)*$
+    AllowedPattern: ^[0-9a-zA-Z-\.]+(/[0-9a-zA-Z-\.]+)*$
     ConstraintDescription: Quick Start key prefix can include numbers, lowercase letters,
       uppercase letters, hyphens (-), and forward slash (/). It cannot start or end
       with forward slash (/) because they are automatically appended.
-    Default: source-bundles
+    Default: KEY_PREFIX_TOKEN/cloudformation
     Description: S3 key prefix for the Quick Start assets. Quick Start key prefix
       can include numbers, lowercase letters, uppercase letters, hyphens (-), and
       forward slash (/). It cannot start or end with forward slash (/) because they
@@ -78,7 +80,7 @@ Resources:
       Description: AWS ElasticBeanstalk Sample Application Version
       SourceBundle:
         S3Bucket: !Ref BucketName
-        S3Key: !Sub '${KeyPrefix}/lucee-eb-example-beanstalk.zip'
+        S3Key: 'KEY_PREFIX_TOKEN/lucee-eb-example-VERSION_STRING_TOKEN-beanstalk.zip'
   LuceeAppConfigTemplate:
     Type: 'AWS::ElasticBeanstalk::ConfigurationTemplate'
     Properties:
