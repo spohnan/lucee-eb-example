@@ -68,7 +68,7 @@ template: package
 # Take the finished artifacts and push them up into the S3 bucket
 #
 push: template
-	@echo "Copying deployment bundle to S3 ..."
+	@echo "Copying deployment bundle to s3://$(BUCKET_NAME)/$(KEY_NAME) ..."
 	@aws s3 sync build/dist/target/*-deployment-bundle/ s3://$(BUCKET_NAME)/$(KEY_NAME)/ \
 		--delete \
 		--only-show-errors \
