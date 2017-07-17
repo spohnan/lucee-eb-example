@@ -42,7 +42,7 @@
                         <configuration>
                             <descriptors>
                                 <descriptor>src/main/assembly/beanstalk.xml</descriptor>
-                                <!--<descriptor>src/main/assembly/deployment-bundle.xml</descriptor>-->
+                                <descriptor>src/main/assembly/deployment-bundle.xml</descriptor>
                             </descriptors>
                         </configuration>
                     </execution>

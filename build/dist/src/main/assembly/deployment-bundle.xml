@@ -1,21 +1,29 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <assembly>
-    <id>deployment-bundle-v${project.version}</id>
+    <id>deployment-bundle</id>
     <formats>
         <format>zip</format>
     </formats>
+    <includeBaseDirectory>false</includeBaseDirectory>
     <fileSets>
         <fileSet>
-            <directory>${project.build.directory}</directory>
+            <directory>../../app/api/${project.build.directory}</directory>
+            <outputDirectory/>
             <includes>
-                <include>${project.artifactId}-beanstalk.zip</include>
+                <include>*-beanstalk.zip</include>
             </includes>
-            <outputDirectory>artifacts</outputDirectory>
+        </fileSet>
+        <fileSet>
+            <directory>../../app/ui/${project.build.directory}</directory>
+            <outputDirectory/>
+            <includes>
+                <include>*-beanstalk.zip</include>
+            </includes>
         </fileSet>
         <fileSet>
             <directory>cloudformation</directory>
             <includes>
-                <include>*.template</include>
+                <include>../../cloudformation/*.template</include>
             </includes>
             <outputDirectory>cloudformation</outputDirectory>
         </fileSet>
