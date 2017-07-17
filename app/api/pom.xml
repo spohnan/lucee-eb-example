@@ -63,39 +63,4 @@
         </repository>
     </repositories>
 
-    <profiles>
-    <profile>
-        <!-- Don't do any additional packaging beyond creation of the war file -->
-        <id>war-only-packaging</id>
-    </profile>
-    <profile>
-        <!-- Also package for Beanstalk (zipped exploded war) -->
-        <id>package-all</id>
-        <activation>
-            <activeByDefault>true</activeByDefault>
-        </activation>
-        <build>
-            <plugins>
-                <plugin>
-                    <artifactId>maven-assembly-plugin</artifactId>
-                    <version>3.0.0</version>
-                    <executions>
-                        <execution>
-                            <id>make-assemblies</id>
-                            <phase>package</phase>
-                            <goals>
-                                <goal>single</goal>
-                            </goals>
-                            <configuration>
-                                <descriptors>
-                                    <descriptor>src/main/assembly/beanstalk.xml</descriptor>
-                                </descriptors>
-                            </configuration>
-                        </execution>
-                    </executions>
-                </plugin>
-            </plugins>
-        </build>
-    </profile>
-    </profiles>
 </project>

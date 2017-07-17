@@ -3,6 +3,7 @@
     <id>beanstalk</id>
     <formats>
         <format>zip</format>
+        <format>dir</format>
     </formats>
     <includeBaseDirectory>false</includeBaseDirectory>
     <fileSets>
@@ -10,14 +11,14 @@
             <directory>../../app/api/${project.build.directory}</directory>
             <outputDirectory/>
             <includes>
-                <include>*-beanstalk.zip</include>
+                <include>*.war</include>
             </includes>
         </fileSet>
         <fileSet>
-            <directory>../../app/ui/${project.build.directory}</directory>
+            <directory>../../app/ui/${project.build.directory}/ROOT-beanstalk</directory>
             <outputDirectory/>
             <includes>
-                <include>*-beanstalk.zip</include>
+                <include>*.war</include>
             </includes>
         </fileSet>
     </fileSets>

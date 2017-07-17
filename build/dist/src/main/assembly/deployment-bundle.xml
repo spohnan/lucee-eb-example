@@ -3,27 +3,21 @@
     <id>deployment-bundle</id>
     <formats>
         <format>zip</format>
+        <format>dir</format>
     </formats>
     <includeBaseDirectory>false</includeBaseDirectory>
     <fileSets>
         <fileSet>
-            <directory>../../app/api/${project.build.directory}</directory>
+            <directory>${project.build.directory}</directory>
             <outputDirectory/>
             <includes>
                 <include>*-beanstalk.zip</include>
             </includes>
         </fileSet>
         <fileSet>
-            <directory>../../app/ui/${project.build.directory}</directory>
-            <outputDirectory/>
+            <directory>../../cloudformation/</directory>
             <includes>
-                <include>*-beanstalk.zip</include>
-            </includes>
-        </fileSet>
-        <fileSet>
-            <directory>cloudformation</directory>
-            <includes>
-                <include>../../cloudformation/*.template</include>
+                <include>*.template</include>
             </includes>
             <outputDirectory>cloudformation</outputDirectory>
         </fileSet>

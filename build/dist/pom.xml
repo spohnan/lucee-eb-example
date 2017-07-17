@@ -31,7 +31,7 @@
         <plugins>
             <plugin>
                 <artifactId>maven-assembly-plugin</artifactId>
-                <version>3.0.0</version>
+                <version>2.4</version>
                 <executions>
                     <execution>
                         <id>make-assemblies</id>
@@ -40,6 +40,7 @@
                             <goal>single</goal>
                         </goals>
                         <configuration>
+                            <finalName>lucee-eb-example-${project.version}</finalName>
                             <descriptors>
                                 <descriptor>src/main/assembly/beanstalk.xml</descriptor>
                                 <descriptor>src/main/assembly/deployment-bundle.xml</descriptor>

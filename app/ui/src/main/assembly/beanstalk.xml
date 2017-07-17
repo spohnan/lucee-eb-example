@@ -2,12 +2,14 @@
 <assembly>
     <id>beanstalk</id>
     <formats>
-        <format>zip</format>
+        <format>dir</format>
     </formats>
-    <fileSets>
-        <fileSet>
-            <directory>${project.build.directory}/ui/</directory>
+    <includeBaseDirectory>false</includeBaseDirectory>
+    <files>
+        <file>
+            <source>${project.build.directory}/ui.war</source>
             <outputDirectory/>
-        </fileSet>
-    </fileSets>
+            <destName>ROOT.war</destName>
+        </file>
+    </files>
 </assembly>
