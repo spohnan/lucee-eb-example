@@ -3,7 +3,7 @@
 
     <groupId>com.andyspohn</groupId>
     <artifactId>parent</artifactId>
-    <version>0.0.1</version>
+    <version>0.0.2-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <url>https://github.com/spohnan/lucee-eb-example</url>
@@ -49,7 +49,7 @@
     <scm>
         <url>https://github.com/spohnan/lucee-eb-example.git</url>
         <connection>scm:git:https://github.com/spohnan/lucee-eb-example.git</connection>
-      <tag>v0.0.1</tag>
+      <tag>HEAD</tag>
   </scm>
 
 </project>
