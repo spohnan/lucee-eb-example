@@ -28,9 +28,10 @@
     </modules>
 
     <!--
-        # Perform a version release with:
+        # Perform a version release with the following commands:
             mvn release:prepare
-            mvn release:perform
+            make push
+            mvn release:perform -Darguments="-Dmaven.deploy.skip=true"
     -->
     <build>
         <plugins>
