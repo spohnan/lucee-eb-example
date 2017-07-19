@@ -1,4 +1,9 @@
 #
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Settings you might want to set externally ex: VERSION=0.0.1 make create
+#
+
+#
 # S3 bucket to which deployment bundle will be uploaded when publishing
 # or downloaded when deploying
 #
@@ -29,6 +34,10 @@ ENV := dev
 endif
 
 #
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Project naming convention settings. Probably don't want to mess with these
+
+#
 # Assume we're storing many projects in the same S3 bucket, start key prefix with project name
 #
 ifeq ($(TEMPLATE_NAME),)
@@ -49,20 +58,36 @@ ifeq ($(ALLOWED_IP_CIDR),)
 ALLOWED_IP_CIDR := $(shell curl -s https://api.ipify.org)/32
 endif
 
-KEY_NAME := $(TEMPLATE_NAME)$(DEV_RELEASE)/$(VERSION)
-BUILD_DIR := build/dist/target/*-deployment-bundle/
-CONSOLE_URL := https://console.aws.amazon.com/cloudformation/home?region=$(AWS_DEFAULT_REGION)\#/stacks/new
-CONSOLE_ARGS := ?stackName=$(TEMPLATE_NAME)-$$(date +'%H%M%S')&templateURL=https://s3.amazonaws.com/cfn-andyspohn-com/$(KEY_NAME)/cloudformation/$(TEMPLATE_NAME).template
-SCEPTRE_ARGS := --var "bucket_name=$(BUCKET_NAME)" --var "key_name=$(KEY_NAME)" --var "version=$(VERSION)" --var "allowed_ip_cidr=$(ALLOWED_IP_CIDR)" --dir "cloudformation"
+#
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Various housekeeping settings
+
+#
+# Check to ensure users have activated the python virtualenv before running sceptre commands
+#
+sceptre-exists: ; @which sceptre > /dev/null || echo "Run the following command to switch to deploy mode and then re-run your comand:\nsource packaging/deploy/bin/activate\n"
 
 all: clean package setup push validate deploy-console tomcat-run
 .PHONY: all
 
 #
+# Construct the S3 keyname based on the version (either detected from Maven or set externally) and dev status
+#
+KEY_NAME := $(TEMPLATE_NAME)$(DEV_RELEASE)/$(VERSION)
+
+#
+# Pass all the common args to every sceptre call to simplify
+#
+SCEPTRE_ARGS := --var "bucket_name=$(BUCKET_NAME)" --var "key_name=$(KEY_NAME)" --var "version=$(VERSION)" --var "allowed_ip_cidr=$(ALLOWED_IP_CIDR)" --dir "cloudformation"
+
+#
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Project initialization and build targets
+
+#
 # This is run once after the project is first checked out to intialize the deployment toolchain
 #
 init:
-	# Clients will need Python 2.7.x installed as a deployment prereq
 	pip install --upgrade virtualenv
 	virtualenv packaging/deploy
 	packaging/deploy/bin/pip install --upgrade sceptre awscli awsebcli
@@ -87,14 +112,9 @@ tomcat-run:
 	@mvn install
 	@mvn --projects build/tomcat cargo:run
 
-#activate:
-#	echo "source packaging/deploy/bin/activate"
-
 #
-# Validate the Cloudformation main template
-#
-validate:
-	@sceptre $(SCEPTRE_ARGS) validate-template $(ENV) $(TEMPLATE_NAME)
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Targets that push files to S3 and use sceptre to orchestrate Cloudformation to build and destroy stacks
 
 #
 # Upload the local application artifacts and Cloudformation templates into S3 using version prefixes
@@ -114,28 +134,38 @@ upload-only: upload-files
 upload: package upload-files
 
 #
-# Deploy an application stack
+# Create an application stack
 #
-deploy:
+create: sceptre-exists
 	@sceptre $(SCEPTRE_ARGS) create-stack $(ENV) $(TEMPLATE_NAME)
 
 #
 # Update a stack. If a version other than the current code is desired set the version ex: VERSION=4.0.0 make update
 #
-update:
+update: sceptre-exists
 	@sceptre $(SCEPTRE_ARGS) update-stack $(ENV) $(TEMPLATE_NAME)
 
 #
-# Terminate an application stack
+# Delete an application stack
 #
-terminate:
+delete: sceptre-exists
 	@sceptre $(SCEPTRE_ARGS) delete-stack $(ENV) $(TEMPLATE_NAME)
 
 #
 # Get the outputs from the stack. The BeanstalkEndpointURL contains the URL to the load balancer
 #
-outputs:
-	@sceptre $(SCEPTRE_ARGS) describe-stack-outputs  $(ENV) $(TEMPLATE_NAME)
+outputs: sceptre-exists
+	@sceptre $(SCEPTRE_ARGS) describe-stack-outputs $(ENV) $(TEMPLATE_NAME)
+
+#
+# Validate the Cloudformation main template
+#
+validate: sceptre-exists
+	@sceptre $(SCEPTRE_ARGS) validate-template $(ENV) $(TEMPLATE_NAME)
+
+#
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Docker container wtih preloaded utilities
 
 #
 # If lucee-eb-demo/deploy is not available from a container registry build it locally

@@ -31,10 +31,7 @@
         # Perform a version release with the following commands:
         mvn release:prepare
         mvn release:perform -Darguments="-Dmaven.deploy.skip=true"
-        # As maven will have started a new SNAPSHOT version check out the release and push to S3
-        git checkout tags/vTAG_NUMBER
-        make push
-        git checkout -
+        VERSION=0.0.4 make upload-only
     -->
     <build>
         <plugins>
