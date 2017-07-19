@@ -59,6 +59,15 @@ all: clean package setup push validate deploy-console tomcat-run
 .PHONY: all
 
 #
+# This is run once after the project is first checked out to intialize the deployment toolchain
+#
+init:
+	# Clients will need Python 2.7.x installed as a deployment prereq
+	pip install --upgrade virtualenv
+	virtualenv packaging/deploy
+	packaging/deploy/bin/pip install --upgrade sceptre awscli awsebcli
+
+#
 # All temporary files are stored within each module's target/ directory. Remove them all
 #
 clean:
@@ -72,73 +81,72 @@ package: clean
 	@mvn package
 
 #
-# The CloudFormation template(s) checked into source control have tokens that get replaced
-# with the actual version and location strings before we push them up into S3
-#
-#template: package
-#	@find $(BUILD_DIR) -type f -name "*.template" | xargs sed -i 's/VERSION_STRING_TOKEN/$(VERSION)/g'
-#	@find $(BUILD_DIR) -type f -name "*.template" | xargs sed -i 's/KEY_PREFIX_TOKEN/$(subst /,\/,$(KEY_NAME))/g'
-
-#
-# Take the finished artifacts and push them up into the S3 bucket
-#
-push:
-	@echo "Copying deployment bundle to s3://$(BUCKET_NAME)/$(KEY_NAME) ..."
-	@aws s3 sync build/dist/target/*-deployment-bundle/ s3://$(BUCKET_NAME)/$(KEY_NAME)/ \
-		--delete \
-		--only-show-errors \
-		--acl public-read
-
-#
-# Run the CloudFormation validation check against our template we just uploaded to ensure there are no errors
-#
-#validate: push
-#	@echo "Validating CloudFormation template"
-#	@aws cloudformation \
-#		validate-template \
-#		--template-url https://s3.amazonaws.com/$(BUCKET_NAME)/$(KEY_NAME)/cloudformation/$(TEMPLATE_NAME).template
-
-#
-# The open command is only available on a Mac but you could also just echo out the quicklink to the console
-#
-#deploy-console: validate
-#	@open "$(CONSOLE_URL)$(CONSOLE_ARGS)"
-
-#
-# Same as above but with no deployment prerequisite.
-# Meant to deploy existing versions ex: "VERSION=1.2.3 make deploy-version-console"
-#
-#deploy-version-console:
-#	@open "$(CONSOLE_URL)$(CONSOLE_ARGS)"
-
-#
 # During development you can build and deploy to a local Tomcat instance of the same version as used by Beanstalk
 #
 tomcat-run:
 	@mvn install
 	@mvn --projects build/tomcat cargo:run
 
-#
-# This is run once after the project is first checked out to intialize the deployment toolchain
-#
-init:
-	# Clients will need Python 2.7.x installed as a deployment prereq
-	pip install --upgrade virtualenv
-	virtualenv deploy
-	. deploy/bin/activate
-	pip install --upgrade sceptre awscli awsebcli
+#activate:
+#	echo "source packaging/deploy/bin/activate"
 
+#
+# Validate the Cloudformation main template
+#
 validate:
 	@sceptre $(SCEPTRE_ARGS) validate-template $(ENV) $(TEMPLATE_NAME)
 
-upload:
-	@aws s3 sync cloudformation/templates/ s3://$(BUCKET_NAME)/$(KEY_NAME)/cloudformation/ --delete --only-show-error
+#
+# Upload the local application artifacts and Cloudformation templates into S3 using version prefixes
+#
+upload-files:
+	@aws s3 sync cloudformation/templates/ s3://$(BUCKET_NAME)/$(KEY_NAME)/cloudformation/ --only-show-errors --acl public-read --delete
+	@aws s3 cp build/dist/target/*-beanstalk.zip s3://$(BUCKET_NAME)/$(KEY_NAME)/ --only-show-errors --acl public-read
 
-deploy: upload validate
+#
+# Just upload the files, don't rebuild
+#
+upload-only: upload-files
+
+#
+# Rebuld the artifacts and then upload
+#
+upload: package upload-files
+
+#
+# Deploy an application stack
+#
+deploy:
 	@sceptre $(SCEPTRE_ARGS) create-stack $(ENV) $(TEMPLATE_NAME)
 
+#
+# Update a stack. If a version other than the current code is desired set the version ex: VERSION=4.0.0 make update
+#
+update:
+	@sceptre $(SCEPTRE_ARGS) update-stack $(ENV) $(TEMPLATE_NAME)
+
+#
+# Terminate an application stack
+#
 terminate:
 	@sceptre $(SCEPTRE_ARGS) delete-stack $(ENV) $(TEMPLATE_NAME)
 
+#
+# Get the outputs from the stack. The BeanstalkEndpointURL contains the URL to the load balancer
+#
 outputs:
 	@sceptre $(SCEPTRE_ARGS) describe-stack-outputs  $(ENV) $(TEMPLATE_NAME)
+
+#
+# If lucee-eb-demo/deploy is not available from a container registry build it locally
+#
+docker-build:
+	@docker build -t lucee-eb-demo/deploy packaging/docker/
+
+#
+# Run the container with all build and deploy artifacts preloaded
+#
+docker-deploy:
+	@docker run -it --rm -w /src \
+		-v ~/.aws:/home/deploy/.aws -v $$(pwd):/src -v ~/.m2:/home/deploy/.m2 \
+		lucee-eb-demo/deploy
