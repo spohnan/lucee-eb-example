@@ -5,7 +5,7 @@
         <groupId>com.andyspohn</groupId>
         <artifactId>build</artifactId>
         <relativePath>../</relativePath>
-        <version>0.0.4</version>
+        <version>0.0.5-SNAPSHOT</version>
     </parent>
 
     <artifactId>tomcat</artifactId>
