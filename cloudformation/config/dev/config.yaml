@@ -1,0 +1,4 @@
+project_code: lucee-eb-example
+region: us-east-1
+template_bucket_name: {{ var.bucket_name }}
+template_key_prefix: {{ var.key_name }}/cloudformation/working

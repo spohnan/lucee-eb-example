@@ -1,0 +1,87 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Deploy application stack example in a basic VPC
+Parameters:
+  AvailabilityZones:
+    Description: >-
+      List of Availability Zones to use for the subnets in the VPC. Note: The
+      logical order is preserved.
+    Type: CommaDelimitedList
+  BucketName:
+    Description: >-
+      The name of the bucket in which templates and application artifacts are stored
+    Type: String
+  KeyName:
+    Description: >-
+      Key prefix to artifacts that contains the artifact versioning information
+    Type: String
+  AllowedIP:
+    Description: The IP CIDR allowed to access the application
+    Type: String
+  Version:
+    Description: Stack version
+    Type: String
+Mappings:
+  AWSInfoRegionMap:
+    ap-northeast-1:
+      QuickStartS3URL: https://s3.amazonaws.com
+    ap-northeast-2:
+      QuickStartS3URL: https://s3.amazonaws.com
+    ap-south-1:
+      QuickStartS3URL: https://s3.amazonaws.com
+    ap-southeast-1:
+      QuickStartS3URL: https://s3.amazonaws.com
+    ap-southeast-2:
+      QuickStartS3URL: https://s3.amazonaws.com
+    ca-central-1:
+      QuickStartS3URL: https://s3.amazonaws.com
+    eu-central-1:
+      QuickStartS3URL: https://s3.amazonaws.com
+    eu-west-1:
+      QuickStartS3URL: https://s3.amazonaws.com
+    eu-west-2:
+      QuickStartS3URL: https://s3.amazonaws.com
+    sa-east-1:
+      QuickStartS3URL: https://s3.amazonaws.com
+    us-east-1:
+      QuickStartS3URL: https://s3.amazonaws.com
+    us-east-2:
+      QuickStartS3URL: https://s3.amazonaws.com
+    us-gov-west-1:
+      QuickStartS3URL: https://s3-us-gov-west-1.amazonaws.com
+    us-west-1:
+      QuickStartS3URL: https://s3.amazonaws.com
+    us-west-2:
+      QuickStartS3URL: https://s3.amazonaws.com
+Resources:
+  VpcTemplate:
+    Type: 'AWS::CloudFormation::Stack'
+    Properties:
+      TemplateURL: !Sub
+        - ${QuickStartS3URL}/${BucketName}/${KeyName}/cloudformation/vpc.yaml
+        - QuickStartS3URL: !FindInMap [ AWSInfoRegionMap, !Ref 'AWS::Region', QuickStartS3URL ]
+      TimeoutInMinutes: 15
+      Parameters:
+        AvailabilityZones: !Join [ ',', !Ref AvailabilityZones ]
+        Version: !Ref Version
+  AppStackTemplate:
+    Type: 'AWS::CloudFormation::Stack'
+    Properties:
+      TemplateURL: !Sub
+        - ${QuickStartS3URL}/${BucketName}/${KeyName}/cloudformation/app-stack.yaml
+        - QuickStartS3URL: !FindInMap [ AWSInfoRegionMap, !Ref 'AWS::Region', QuickStartS3URL ]
+      TimeoutInMinutes: 15
+      Parameters:
+        VPCID: !GetAtt VpcTemplate.Outputs.VPCID
+        AppSubnet1: !GetAtt VpcTemplate.Outputs.PublicSubnet1ID
+        AppSubnet2: !GetAtt VpcTemplate.Outputs.PublicSubnet2ID
+        AllowedIP: !Ref AllowedIP
+        BucketName: !Ref BucketName
+        KeyName: !Ref KeyName
+        Version: !Ref Version
+Outputs:
+  BeanstalkEndpointURL:
+    Value: !GetAtt AppStackTemplate.Outputs.BeanstalkEndpointURL
+    Description: Endpoint of the Beanstalk application
+  Version:
+    Value: !Ref Version
+    Description: Stack version
