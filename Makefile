@@ -80,6 +80,24 @@ KEY_NAME := $(TEMPLATE_NAME)$(DEV_RELEASE)/$(VERSION)
 #
 SCEPTRE_ARGS := --var "bucket_name=$(BUCKET_NAME)" --var "key_name=$(KEY_NAME)" --var "version=$(VERSION)" --var "allowed_ip_cidr=$(ALLOWED_IP_CIDR)" --dir "cloudformation"
 
+help:
+	@echo ""
+	@echo " --- Development Targets ---"
+	@echo "init:        Run once after the project is first checked out to intialize the deployment toolchain"
+	@echo "clean:       Remove all temporary build files"
+	@echo "package:     Clean, build and then package all of the application artifacts"
+	@echo "tomcat-run:  Package application artifacts and then run in a local Tomcat server"
+	@echo ""
+	@echo "--- S3 Operations ---"
+	@echo "upload:      Package application artifacts and then upload them to the S3 bucket"
+	@echo "upload-only: Skip application rebuild and just upload existing artifacts"
+	@echo ""
+	@echo "--- Cloudformation orchestration targets ---"
+	@echo "create:       Create an application stack"
+	@echo "update:       Update an application stack"
+	@echo "delete:       Delete an application stack"
+	@echo "outputs:      Display the stack outputs like the address to the load balancer"
+	@echo ""
 #
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Project initialization and build targets
@@ -114,7 +132,7 @@ tomcat-run:
 
 #
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# Targets that push files to S3 and use sceptre to orchestrate Cloudformation to build and destroy stacks
+# Targets that push files to S3
 
 #
 # Upload the local application artifacts and Cloudformation templates into S3 using version prefixes
@@ -132,6 +150,10 @@ upload-only: upload-files
 # Rebuld the artifacts and then upload
 #
 upload: package upload-files
+
+#
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Cloudformation orchestration targets
 
 #
 # Create an application stack
