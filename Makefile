@@ -218,6 +218,12 @@ docs:
 	@mvn -P pdf,html -pl docs
 .PHONY: docs
 
+#TODO: Put in support for "latest" version uploads
+upload-docs: #docs
+	@aws s3 sync docs/target/generated-docs/ s3://$(BUCKET_NAME)/$(TEMPLATE_NAME)/latest/docs --only-show-errors --acl public-read --delete
+.PHONY: upload-docs
+
+
 #
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Docker container wtih preloaded utilities

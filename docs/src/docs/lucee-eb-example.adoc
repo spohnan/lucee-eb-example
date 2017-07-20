@@ -1,16 +1,51 @@
-= Lucee/Elasticbeanstalk Example Application
+= Elastic Beanstalk Example App
 v${project.version}
 ifdef::backend-pdf[]
-:title-logo-image: image:icf-logo.png[align="center"]
+:title-logo-image: image:icf-logo.png[500, 500, align="center"]
 endif::backend-pdf[]
 
 ifdef::backend-html5[]
-image::icf-logo.png[ICF Logo, 200, 200, float="left"]
+image::icf-logo.png[ICF Logo, 175, 175, float="left"]
 endif::backend-html5[]
 
-== Executive Summary
+== Overview
 
-== Links
+This project demonstrates an automated process that can build multiple applications, deploy them to Elastic Beanstalk,
+update them without user facing outages and all in a completely automated manner.
+
+== Tools
+
+=== Project Build and Packaging
+
+https://maven.apache.org/[Apache Maven^] is used to build each of the applications and package the resulting artifacts
+into zip bundles for use by Elastic Beanstalk as source bundles and also as a means of producing a final distribtion
+package that could be delivered to someone for use in their own account. Any other build tool that could perform these
+steps could be substituted.
+
+=== Application Platform
+
+https://aws.amazon.com/elasticbeanstalk/[AWS Elastic Beanstalk^] is an easy-to-use service for deploying and scaling
+web applications and services developed with Java, .NET, PHP, Node.js, Python, Ruby, Go, and Docker on familiar servers
+such as Apache, Nginx, Passenger, and IIS.
+
+=== Deployment Orchestration
+
+https://aws.amazon.com/cloudformation/[AWS CloudFormation^] gives developers and systems administrators an easy way to
+create and manage a collection of related AWS resources, provisioning and updating them in an orderly and predictable
+fashion.
+
+https://sceptre.cloudreach.com[Sceptre] is a tool to drive Cloudformation. Sceptre manages the creating, updating and
+deletion of stacks, and provides meta commands to allow users to get information about their stacks.
+
+
+== Products Links
+
+* https://maven.apache.org/[Apache Maven^]: Application build and packaging
+* https://aws.amazon.com/cloudformation/[AWS CloudFormation^]: Deployment orchestration
+* https://aws.amazon.com/elasticbeanstalk/[AWS Elastic Beanstalk^]: Application platform
+* https://sceptre.cloudreach.com[Sceptre]: Deployment orchestration
+
+== Documentation Links
 ////
 PDF Generation gives an error if you try to use icons
 ////
