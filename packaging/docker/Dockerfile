@@ -2,7 +2,7 @@ FROM maven:alpine
 
 # Add an unprivilged user, install needed packages and set up python virtualenv
 RUN adduser -S deploy; \
-    apk --no-cache add bash git make python py-pip; \
+    apk --no-cache add bash curl git make python py-pip; \
     pip install virtualenv; \
     virtualenv packaging/deploy; \
     packaging/deploy/bin/pip install --upgrade sceptre awscli awsebcli

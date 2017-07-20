@@ -5,13 +5,89 @@ ifdef::backend-pdf[]
 endif::backend-pdf[]
 
 ifdef::backend-html5[]
-image::icf-logo.png[ICF Logo, 175, 175, float="left"]
+image::icf-logo.png[ICF Logo, 150, 150, float="left"]
 endif::backend-html5[]
 
 == Overview
 
 This project demonstrates an automated process that can build multiple applications, deploy them to Elastic Beanstalk,
 update them without user facing outages and all in a completely automated manner.
+
+== Build/Packaging Quick Start
+
+=== Prerequisites
+
+To be able to build this application you'll need the following installed locally. Optionally, if
+you have Docker installed you could use the `make docker-build` followed by `make docker-deploy` commands
+to use a container with all the tools pre-installed for building or deploying the solution.
+
+* Java - Neither of our apps are written in Java, this is a prerequisite for running Maven
+* Maven - Builds and packages the application files into executable artifacts
+* Make - The Makefile contains all of the one-liner commands and executes them in the right order
+
+=== Steps
+
+. `make tomcat-run` - Package and run the current project code on a local Tomcat instance
+. Open `http://localhost:8080` in a browser once started.
+
+=== Wrap-up
+
+In this quick start we demonstrated the ability to build several applications and package them for
+deployment within an application server of the same type and version as is used by Elastic Beanstalk.
+This is a good last step to test locally before deploying to AWS. Use Ctrl-c to stop the app server within
+the console when you're done with this quick start.
+
+== Deployment Quick Start
+
+=== Prerequisites
+
+To be able to deploy pre-staged versions of this application you'll need the following installed locally. Optionally, if
+you have Docker installed you could use the `make docker-build` followed by `make docker-deploy` commands
+to use a container with all the tools pre-installed for building or deploying the solution.
+
+* Make - The Makefile contains all of the one-liner commands and executes them in the right order
+* Curl - Used to retrieve your IP address to configure the security group
+* AWS CLI - The AWS command line interface and an account key with administrative access
+
+=== Steps
+
+WARNING: The steps below will provision resources into your AWS account and accumulate some small amount
+of charges. Ensure you clean up after you're done with the quick start to minimize costs
+
+. Deploy a specific version of the solution with the command `VERSION=0.0.4 make create`
+. When the deployment has completed retrieve the URL to the load balancer with the command `make outputs` and view in a browser
+. Update to a new version with the command `VERSION=0.0.5 make create`
+. Terminate and remove all resources with the command `make delete` when finished
+
+=== Diagram
+
+The Simple VPC Architecture Deployment diagram shows the resources created when launching this example.
+
+ifdef::backend-pdf[]
+image::simple-vpc-architecture.png[scaledwidth="100%",alt="Simple VPC Architecture Deployment"]
+endif::backend-pdf[]
+ifdef::backend-html5[]
+image::simple-vpc-architecture.png[scaledwidth="100%",alt="Simple VPC Architecture Deployment", link=images/simple-vpc-architecture.png]
+endif::backend-html5[]
+[#figure-1]
+_Figure 1: Simple VPC Architecture Deployment_
+
+* A https://aws.amazon.com/vpc/[Virtual Private Cloud (VPC)^] with two subnets in different
+http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-regions-availability-zones.html[availability zones (AZs)^] gives the
+solution an increased level of availability.
+* The https://aws.amazon.com/elasticloadbalancing/[Load Balancer^] distributes incoming requests among the available
+application servers. The load balancer is protected by a http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-network-security.html[security group^]
+that only allows traffic from your network address.
+    ** There's a line in the Makefile that retrieves your IP address and uses it as an input parameter `ALLOWED_IP_CIDR := $(shell curl -s https://api.ipify.org)/32`
+* If the hardware underlying an instance fails the other instances behind the load balancer will receive all the traffic
+until the https://aws.amazon.com/autoscaling/[auto scaling group^] detects that the unhealthy instance and replaces it
+with another. This process is sometimes referred to as "self healing"
+    ** In a more serious scenario AWS could have an outage affecting an entire data center and all instances in one of the availability zones could become unreachable but the solution would retain the ability to service requests from the other AZ.
+* All of these and many other architecture best practices are explained in the https://d0.awsstatic.com/whitepapers/AWS_Cloud_Best_Practices.pdf[AWS Cloud Best Practices Whitepaper^].
+
+=== Wrap-up
+
+Ensure you run the `make delete` command when finished to terminate and remove all resources from your account.
 
 == Tools
 
@@ -34,18 +110,84 @@ https://aws.amazon.com/cloudformation/[AWS CloudFormation^] gives developers and
 create and manage a collection of related AWS resources, provisioning and updating them in an orderly and predictable
 fashion.
 
-https://sceptre.cloudreach.com[Sceptre] is a tool to drive Cloudformation. Sceptre manages the creating, updating and
+https://sceptre.cloudreach.com[Sceptre^] is a tool to drive Cloudformation. Sceptre manages the creating, updating and
 deletion of stacks, and provides meta commands to allow users to get information about their stacks.
 
+=== Documentation
 
-== Products Links
+http://asciidoctor.org[AsciiDoctor^] markup and transformation is used to create the documentation
+
+== Extended Information
+
+Detailed descriptions of various portions of the solution
+
+=== Code Structure
+
+```
+├── app
+│   ├── api
+│   └── ui
+├── build
+│   ├── dist
+│   └── tomcat
+├── cloudformation
+│   ├── config
+│   └── templates
+├── docs
+│   ├── src
+│   └── target
+└── packaging
+    ├── deploy
+    └── docker
+```
+
+* The app module contains the two applications
+    ** api - A Lucee API project
+    ** ui - A ReactJS front end
+* The build modules orchestrate various build functions
+    ** dist - Contains finished artifacts in `dist/target`
+    ** tomcat - Runs both apps in a local Tomcat instance
+* The cloudformation directory contains CF templates and config files by Sceptre
+    ** The VPC deployment script is really basic in this example, for production we'd use https://github.com/aws-quickstart/quickstart-enterprise-accelerator-nist[something more substantial^]
+* The packaging directory contains utilities used to deploy the application bundle
+    ** A Python virtual environment with all the needed modules installed to deploy the solution is contained with the deploy directory
+    ** A Dockerfile to create a container with all the needed dependencies to build and deploy the solution
+
+=== S3 Bucket Structure
+
+```
+s3-bucket/
+└── lucee-eb-example/
+    ├── 0.0.3/
+    │   ├── cloudformation/
+    │   └── lucee-eb-example-0.0.3-beanstalk.zip
+    ├── 0.0.4/
+    │   ├── cloudformation/
+    │   └── lucee-eb-example-0.0.4-beanstalk.zip
+    ├── dev/
+    │   └── 0.0.5-SNAPSHOT/
+    │       ├── cloudformation/
+    │       └── lucee-eb-example-0.0.5-beanstalk.zip
+    └── latest/
+        └── 0.0.4/
+            ├── cloudformation/
+            └── lucee-eb-example-0.0.4-beanstalk.zip
+```
+
+CloudFormation and ElasticBeanstalk both pull artifacts from S3 so the development workflow involves developing and testing
+locally using the `tomcat-run` target and when ready to deploy to AWS using the upload target prior to issuing a `create` or
+`update` of a stack. The Makefile will either detect the version of the code from the local Maven project or you can set a
+specific version prior to calling a target to say update to a new version or create a stack of a specific version
+ex: `VERSION-0.0.3 make update`
+
+=== Product Links
 
 * https://maven.apache.org/[Apache Maven^]: Application build and packaging
 * https://aws.amazon.com/cloudformation/[AWS CloudFormation^]: Deployment orchestration
 * https://aws.amazon.com/elasticbeanstalk/[AWS Elastic Beanstalk^]: Application platform
 * https://sceptre.cloudreach.com[Sceptre]: Deployment orchestration
 
-== Documentation Links
+=== Documentation Links
 ////
 PDF Generation gives an error if you try to use icons
 ////
@@ -57,6 +199,6 @@ ifdef::backend-pdf[]
 === https://github.com/spohnan/lucee-eb-example[Source^]
 endif::backend-pdf[]
 
-== Version
+=== Version
 
 This documentation was generated on ${build.timestamp} for project version ${project.version} from commit https://github.com/spohnan/lucee-eb-example/commit/${buildNumber}[${buildNumber}^].
