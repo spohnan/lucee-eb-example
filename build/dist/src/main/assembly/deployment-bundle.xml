@@ -14,12 +14,19 @@
             </includes>
         </fileSet>
         <fileSet>
-            <directory>../../cloudformation/</directory>
+            <directory>../../cloudformation</directory>
             <outputDirectory>cloudformation</outputDirectory>
         </fileSet>
         <fileSet>
             <directory>../../packaging/deploy</directory>
             <outputDirectory>deploy</outputDirectory>
+        </fileSet>
+        <fileSet>
+            <directory>../../docs/target</directory>
+            <outputDirectory/>
+            <includes>
+                <include>docs-bundle.zip</include>
+            </includes>
         </fileSet>
     </fileSets>
 </assembly>

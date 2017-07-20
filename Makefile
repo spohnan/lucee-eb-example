@@ -67,9 +67,6 @@ endif
 #
 sceptre-exists: ; @which sceptre > /dev/null || echo "Run the following command to switch to deploy mode and then re-run your comand:\nsource packaging/deploy/bin/activate\n"
 
-all: clean package setup push validate deploy-console tomcat-run
-.PHONY: all
-
 #
 # Construct the S3 keyname based on the version (either detected from Maven or set externally) and dev status
 #
@@ -98,6 +95,12 @@ help:
 	@echo "delete:       Delete an application stack"
 	@echo "outputs:      Display the stack outputs like the address to the load balancer"
 	@echo ""
+	@echo "--- Packaging targets ---"
+	@echo "dist:         Create a distribution package containing all app and doc artifacts"
+	@echo "docs:         Generate documentation"
+	@echo ""
+.PHONY: help
+
 #
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Project initialization and build targets
@@ -109,12 +112,14 @@ init:
 	pip install --upgrade virtualenv
 	virtualenv packaging/deploy
 	packaging/deploy/bin/pip install --upgrade sceptre awscli awsebcli
+.PHONY: init
 
 #
 # All temporary files are stored within each module's target/ directory. Remove them all
 #
 clean:
 	@mvn clean
+.PHONY: clean
 
 #
 # The Maven package step will compile, test and then package up code into artifacts
@@ -122,6 +127,7 @@ clean:
 #
 package: clean
 	@mvn package
+.PHONY: package
 
 #
 # During development you can build and deploy to a local Tomcat instance of the same version as used by Beanstalk
@@ -129,6 +135,7 @@ package: clean
 tomcat-run:
 	@mvn install
 	@mvn --projects build/tomcat cargo:run
+.PHONY: tomcat-run
 
 #
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -140,16 +147,19 @@ tomcat-run:
 upload-files:
 	@aws s3 sync cloudformation/templates/ s3://$(BUCKET_NAME)/$(KEY_NAME)/cloudformation/ --only-show-errors --acl public-read --delete
 	@aws s3 cp build/dist/target/*-beanstalk.zip s3://$(BUCKET_NAME)/$(KEY_NAME)/ --only-show-errors --acl public-read
+.PHONY: upload-files
 
 #
 # Just upload the files, don't rebuild
 #
 upload-only: upload-files
+.PHONY: upload-only
 
 #
 # Rebuld the artifacts and then upload
 #
 upload: package upload-files
+.PHONY: upload
 
 #
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -160,30 +170,53 @@ upload: package upload-files
 #
 create: sceptre-exists
 	@sceptre $(SCEPTRE_ARGS) create-stack $(ENV) $(TEMPLATE_NAME)
+.PHONY: create
 
 #
 # Update a stack. If a version other than the current code is desired set the version ex: VERSION=4.0.0 make update
 #
 update: sceptre-exists
 	@sceptre $(SCEPTRE_ARGS) update-stack $(ENV) $(TEMPLATE_NAME)
+.PHONY: update
 
 #
 # Delete an application stack
 #
 delete: sceptre-exists
 	@sceptre $(SCEPTRE_ARGS) delete-stack $(ENV) $(TEMPLATE_NAME)
+.PHONY: delete
 
 #
 # Get the outputs from the stack. The BeanstalkEndpointURL contains the URL to the load balancer
 #
 outputs: sceptre-exists
 	@sceptre $(SCEPTRE_ARGS) describe-stack-outputs $(ENV) $(TEMPLATE_NAME)
+.PHONY: outputs
 
 #
 # Validate the Cloudformation main template
 #
 validate: sceptre-exists
 	@sceptre $(SCEPTRE_ARGS) validate-template $(ENV) $(TEMPLATE_NAME)
+.PHONY: validate
+
+#
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Packaging and documentation targets
+
+#
+# Run the all of the doc output profiles and dist module
+#
+dist:
+	@mvn -P dist,pdf,html package
+.PHONY: dist
+
+#
+# Activate all the output format profiles for the docs module
+#
+docs:
+	@mvn -P pdf,html -pl docs
+.PHONY: docs
 
 #
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -194,6 +227,7 @@ validate: sceptre-exists
 #
 docker-build:
 	@docker build -t lucee-eb-demo/deploy packaging/docker/
+.PHONY: docker-build
 
 #
 # Run the container with all build and deploy artifacts preloaded
@@ -202,3 +236,4 @@ docker-deploy:
 	@docker run -it --rm -w /src \
 		-v ~/.aws:/home/deploy/.aws -v $$(pwd):/src -v ~/.m2:/home/deploy/.m2 \
 		lucee-eb-demo/deploy
+.PHONY: docker-deploy

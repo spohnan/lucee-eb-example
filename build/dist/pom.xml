@@ -24,31 +24,47 @@
             <version>${project.version}</version>
             <type>war</type>
         </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>docs</artifactId>
+            <version>${project.version}</version>
+        </dependency>
     </dependencies>
 
-    <build>
-        <plugins>
-            <plugin>
-                <artifactId>maven-assembly-plugin</artifactId>
-                <version>2.4</version>
-                <executions>
-                    <execution>
-                        <id>make-assemblies</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>single</goal>
-                        </goals>
-                        <configuration>
-                            <finalName>lucee-eb-example-${project.version}</finalName>
-                            <descriptors>
-                                <descriptor>src/main/assembly/beanstalk.xml</descriptor>
-                                <descriptor>src/main/assembly/deployment-bundle.xml</descriptor>
-                            </descriptors>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-        </plugins>
-    </build>
+    <profiles>
+        <profile>
+            <id>no-dist</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+        </profile>
+        <profile>
+            <id>dist</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <artifactId>maven-assembly-plugin</artifactId>
+                        <version>2.4</version>
+                        <executions>
+                            <execution>
+                                <id>make-assemblies</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>single</goal>
+                                </goals>
+                                <configuration>
+                                    <finalName>lucee-eb-example-${project.version}</finalName>
+                                    <descriptors>
+                                        <descriptor>src/main/assembly/beanstalk.xml</descriptor>
+                                        <descriptor>src/main/assembly/deployment-bundle.xml</descriptor>
+                                    </descriptors>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 
 </project>

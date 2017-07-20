@@ -1,0 +1,27 @@
+= Lucee/Elasticbeanstalk Example Application
+v${project.version}
+ifdef::backend-pdf[]
+:title-logo-image: image:icf-logo.png[align="center"]
+endif::backend-pdf[]
+
+ifdef::backend-html5[]
+image::icf-logo.png[ICF Logo, 200, 200, float="left"]
+endif::backend-html5[]
+
+== Executive Summary
+
+== Links
+////
+PDF Generation gives an error if you try to use icons
+////
+ifdef::backend-html5[]
+=== icon:file-pdf-o[] pass:[<a href="./lucee-eb-example.pdf" target="_blank">PDF Version</a>]
+=== icon:file-code-o[] https://github.com/spohnan/lucee-eb-example[Source^]
+endif::backend-html5[]
+ifdef::backend-pdf[]
+=== https://github.com/spohnan/lucee-eb-example[Source^]
+endif::backend-pdf[]
+
+== Version
+
+This documentation was generated on ${build.timestamp} for project version ${project.version} from commit https://github.com/spohnan/lucee-eb-example/commit/${buildNumber}[${buildNumber}^].
