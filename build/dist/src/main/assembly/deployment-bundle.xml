@@ -8,24 +8,28 @@
     <fileSets>
         <fileSet>
             <directory>${project.build.directory}</directory>
-            <outputDirectory/>
+            <outputDirectory>deployment-bundle</outputDirectory>
             <includes>
                 <include>*-beanstalk.zip</include>
             </includes>
         </fileSet>
         <fileSet>
             <directory>../../cloudformation</directory>
-            <outputDirectory>cloudformation</outputDirectory>
+            <outputDirectory>deployment-bundle/cloudformation</outputDirectory>
         </fileSet>
         <fileSet>
             <directory>../../packaging/deploy</directory>
-            <outputDirectory>deploy</outputDirectory>
+            <outputDirectory>deployment-bundle/packaging/deploy</outputDirectory>
         </fileSet>
         <fileSet>
-            <directory>../../docs/target</directory>
-            <outputDirectory/>
+            <directory>../../docs/target/generated-docs</directory>
+            <outputDirectory>deployment-bundle/docs</outputDirectory>
+        </fileSet>
+        <fileSet>
+            <directory>../..</directory>
+            <outputDirectory>deployment-bundle</outputDirectory>
             <includes>
-                <include>docs-bundle.zip</include>
+                <include>Makefile</include>
             </includes>
         </fileSet>
     </fileSets>

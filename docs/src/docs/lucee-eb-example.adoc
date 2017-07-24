@@ -27,6 +27,7 @@ to use a container with all the tools pre-installed for building or deploying th
 
 === Steps
 
+. `git clone https://github.com/spohnan/lucee-eb-example; cd lucee-eb-example` to check out a copy of the code
 . `make tomcat-run` - Package and run the current project code on a local Tomcat instance
 . Open `http://localhost:8080` in a browser once started.
 
@@ -45,18 +46,33 @@ To be able to deploy pre-staged versions of this application you'll need the fol
 you have Docker installed you could use the `make docker-build` followed by `make docker-deploy` commands
 to use a container with all the tools pre-installed for building or deploying the solution.
 
+
+* AWS CLI - The AWS command line interface and an account key with administrative access
+*and*
+* Docker - Build and use the container from the `packaging/docker` folder
+*or*
 * Make - The Makefile contains all of the one-liner commands and executes them in the right order
 * Curl - Used to retrieve your IP address to configure the security group
-* AWS CLI - The AWS command line interface and an account key with administrative access
 
 === Steps
 
 WARNING: The steps below will provision resources into your AWS account and accumulate some small amount
 of charges. Ensure you clean up after you're done with the quick start to minimize costs
 
+
+. Download a deployment bundle from the example bucket
+    ** Docker: `curl -O https://s3.amazonaws.com/cfn-andyspohn-com/lucee-eb-example/dev/0.0.5/lucee-eb-example-0.0.5-deployment-bundle.zip`
+    ** Local: Use curl/wget or just download using a browser
+. Unzip the deployment bundle and change into the directory
+    ** Docker: `unzip *.zip; cd deployment-bundle`
+    ** Local: Use your favorite unzip utility. Change into the unzipped directory and run `source packaging/deploy/bin/activate`
+
+
+
+. (One time only) Run the `make init` command to initalize the Python virtual environment.
+    ** After the command completes run the command `source packaging/deploy/bin/activate` to activate the environment
 . Deploy a specific version of the solution with the command `VERSION=0.0.4 make create`
 . When the deployment has completed retrieve the URL to the load balancer with the command `make outputs` and view in a browser
-. Update to a new version with the command `VERSION=0.0.5 make create`
 . Terminate and remove all resources with the command `make delete` when finished
 
 === Diagram
@@ -83,39 +99,73 @@ that only allows traffic from your network address.
 until the https://aws.amazon.com/autoscaling/[auto scaling group^] detects that the unhealthy instance and replaces it
 with another. This process is sometimes referred to as "self healing"
     ** In a more serious scenario AWS could have an outage affecting an entire data center and all instances in one of the availability zones could become unreachable but the solution would retain the ability to service requests from the other AZ.
-* All of these and many other architecture best practices are explained in the https://d0.awsstatic.com/whitepapers/AWS_Cloud_Best_Practices.pdf[AWS Cloud Best Practices Whitepaper^].
 
 === Wrap-up
 
 Ensure you run the `make delete` command when finished to terminate and remove all resources from your account.
 
+== Key Concepts
+
+The specific tools and process demonstrated in this example can be replaced with others with similar capabilities to
+
+=== Automation
+
+_Everything_ has to be automated. Any time we rely on manual steps the ability to scale is lost and errors will be introduced.
+This is admittedly a really simplistic example, in a non-trival deployment we'd have to incorporate secrets management for
+sensitive configuration settings like passwords and also service discovery as we'd probably host the UI and API on different
+servers. As you can see from the minimal amount of steps required in the quick start examples we've automated all of the
+steps to deploy a highly available multi-application solution to AWS.
+
+* Application builds and packaging
+    ** Each application is built and pacakged with identifying version and build environment information
+* Beanstalk http://docs.aws.amazon.com/elasticbeanstalk/latest/dg/applications-sourcebundle.html[source bundle creation^]
+* Documentation generation in several formats
+* A final distribution archive file containing all of the artifacts produced in the steps above
+* Deployment orchestration that will deploy and update between any two compatible versions
+* Termination and cleanup of all provisioned resources so as not to continue to accumulate charges
+
+=== Architecture
+
+==== Composability
+
+The servers and networking components are provisioned using separate templates with the output of the VPC networking template
+providing the input parameters needed for the application stack template. This allows us to swap out this simplistic networking
+configuration for one with much more security baked into the environment.
+
+==== Highly Available
+
+The use of CloudFormation and Elastic Beanstalk give us many of the recommended best practices detailed in the https://d0.awsstatic.com/whitepapers/AWS_Cloud_Best_Practices.pdf[AWS Cloud Best Practices Whitepaper^].
+
+==== Immmutability
+
+Since every step of the deployment and recovery process is automated there is no need and in fact we don't want to _ever_
+connect to the console of a server and make changes. This practice leads to the creation of "snowflake" servers which make management
+more difficult.
+
+[quote, Martin Fowler on Immutable Servers]
+By frequently destroying and rebuilding servers from the base image, 100% of the server's elements are reset
+to a known state, without spending a ridiculous amount of time specifying and maintaining detailed configuration specifications.
+https://martinfowler.com/bliki/ImmutableServer.html[link^]
+
 == Tools
 
-=== Project Build and Packaging
-
-https://maven.apache.org/[Apache Maven^] is used to build each of the applications and package the resulting artifacts
+* Project Build and Packaging:
+    ** https://maven.apache.org/[Apache Maven^] is used to build each of the applications and package the resulting artifacts
 into zip bundles for use by Elastic Beanstalk as source bundles and also as a means of producing a final distribtion
 package that could be delivered to someone for use in their own account. Any other build tool that could perform these
 steps could be substituted.
-
-=== Application Platform
-
-https://aws.amazon.com/elasticbeanstalk/[AWS Elastic Beanstalk^] is an easy-to-use service for deploying and scaling
+*Application Platform:
+    ** https://aws.amazon.com/elasticbeanstalk/[AWS Elastic Beanstalk^] is an easy-to-use service for deploying and scaling
 web applications and services developed with Java, .NET, PHP, Node.js, Python, Ruby, Go, and Docker on familiar servers
 such as Apache, Nginx, Passenger, and IIS.
-
-=== Deployment Orchestration
-
-https://aws.amazon.com/cloudformation/[AWS CloudFormation^] gives developers and systems administrators an easy way to
+* Deployment Orchestration
+    ** https://aws.amazon.com/cloudformation/[AWS CloudFormation^] gives developers and systems administrators an easy way to
 create and manage a collection of related AWS resources, provisioning and updating them in an orderly and predictable
 fashion.
-
-https://sceptre.cloudreach.com[Sceptre^] is a tool to drive Cloudformation. Sceptre manages the creating, updating and
+    ** https://sceptre.cloudreach.com[Sceptre^] is a tool to drive Cloudformation. Sceptre manages the creating, updating and
 deletion of stacks, and provides meta commands to allow users to get information about their stacks.
-
-=== Documentation
-
-http://asciidoctor.org[AsciiDoctor^] markup and transformation is used to create the documentation
+* Documentation:
+    ** http://asciidoctor.org[AsciiDoctor^] markup and transformation is used to create the documentation
 
 == Extended Information
 
@@ -179,6 +229,39 @@ locally using the `tomcat-run` target and when ready to deploy to AWS using the 
 `update` of a stack. The Makefile will either detect the version of the code from the local Maven project or you can set a
 specific version prior to calling a target to say update to a new version or create a stack of a specific version
 ex: `VERSION-0.0.3 make update`
+
+=== Docker
+
+Rather than installing tool on your system the project can be built and deployed using a preconfigured Docker container
+if that's a more convenient option.
+
+==== Building
+
+From the root directory of the project run the command `docker build -t lucee-eb-demo/deploy packaging/docker/` This creates
+the Docker image locally.
+
+==== Running
+
+Any content you'd like saved between runs of the container need to be stored externally and mounted into the container at launch.
+The command below can be altered as desired but as listed it will mount the directory which stores your AWS configuration so
+you don't have to set up your credentials each time, the project source directory and if you're building the
+
+```
+docker run -it --rm \
+    -w /home/deploy \
+    -v ~/.aws:/home/deploy/.aws \
+	lucee-eb-demo/deploy
+```
+_Deploying pre-existing application versions from example site_
+
+```
+docker run -it --rm -w /src \
+    -v ~/.aws:/home/deploy/.aws \
+    -v $(pwd):/src \
+    -v ~/.m2:/home/deploy/.m2 \
+	lucee-eb-demo/deploy
+```
+_More volume mounts will be needed if you're building and deploying the solution_
 
 === Product Links
 

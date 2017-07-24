@@ -22,7 +22,6 @@
     </properties>
 
     <build>
-        <defaultGoal>package</defaultGoal>
         <plugins>
             <plugin>
                 <artifactId>maven-resources-plugin</artifactId>
@@ -51,23 +50,6 @@
                                 <nonFilteredFileExtension>ttf</nonFilteredFileExtension>
                                 <nonFilteredFileExtension>woff</nonFilteredFileExtension>
                             </nonFilteredFileExtensions>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <artifactId>maven-assembly-plugin</artifactId>
-                <version>2.6</version>
-                <executions>
-                    <execution>
-                        <id>create-archive</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>single</goal>
-                        </goals>
-                        <configuration>
-                            <finalName>${artifact.name}</finalName>
-                            <descriptor>src/assembly/package.xml</descriptor>
                         </configuration>
                     </execution>
                 </executions>
@@ -132,6 +114,25 @@
                                         <idprefix/>
                                         <idseparator>-</idseparator>
                                     </attributes>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <!--
+                        The default profile skips doc creation so assembly fails as there are no files
+                        ideally if either pdf or html were created this should run but as they are normally
+                        created together to create a distribution bundle I'm attaching it only to the pdf profile
+                    -->
+                    <plugin>
+                        <artifactId>maven-assembly-plugin</artifactId>
+                        <version>2.6</version>
+                        <executions>
+                            <execution>
+                                <id>create-archive</id>
+                                <phase>package</phase>
+                                <configuration>
+                                    <finalName>${artifact.name}</finalName>
+                                    <descriptor>src/assembly/package.xml</descriptor>
                                 </configuration>
                             </execution>
                         </executions>

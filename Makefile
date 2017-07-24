@@ -79,6 +79,12 @@ SCEPTRE_ARGS := --var "bucket_name=$(BUCKET_NAME)" --var "key_name=$(KEY_NAME)" 
 
 help:
 	@echo ""
+	@echo "--- Cloudformation orchestration targets ---"
+	@echo "create:       Create an application stack"
+	@echo "update:       Update an application stack"
+	@echo "delete:       Delete an application stack"
+	@echo "outputs:      Display the stack outputs like the address to the load balancer"
+	@echo ""
 	@echo " --- Development Targets ---"
 	@echo "init:        Run once after the project is first checked out to intialize the deployment toolchain"
 	@echo "clean:       Remove all temporary build files"
@@ -87,13 +93,7 @@ help:
 	@echo ""
 	@echo "--- S3 Operations ---"
 	@echo "upload:      Package application artifacts and then upload them to the S3 bucket"
-	@echo "upload-only: Skip application rebuild and just upload existing artifacts"
-	@echo ""
-	@echo "--- Cloudformation orchestration targets ---"
-	@echo "create:       Create an application stack"
-	@echo "update:       Update an application stack"
-	@echo "delete:       Delete an application stack"
-	@echo "outputs:      Display the stack outputs like the address to the load balancer"
+	@echo "upload-only: Skip distribution bundle rebuild and just upload existing artifacts"
 	@echo ""
 	@echo "--- Packaging targets ---"
 	@echo "dist:         Create a distribution package containing all app and doc artifacts"
@@ -146,7 +146,7 @@ tomcat-run:
 #
 upload-files:
 	@aws s3 sync cloudformation/templates/ s3://$(BUCKET_NAME)/$(KEY_NAME)/cloudformation/ --only-show-errors --acl public-read --delete
-	@aws s3 cp build/dist/target/*-beanstalk.zip s3://$(BUCKET_NAME)/$(KEY_NAME)/ --only-show-errors --acl public-read
+	@aws s3 cp build/dist/target/ s3://$(BUCKET_NAME)/$(KEY_NAME)/ --recursive --include "*.zip" --only-show-errors --acl public-read
 .PHONY: upload-files
 
 #
@@ -158,7 +158,7 @@ upload-only: upload-files
 #
 # Rebuld the artifacts and then upload
 #
-upload: package upload-files
+upload: dist upload-files
 .PHONY: upload
 
 #
@@ -208,7 +208,7 @@ validate: sceptre-exists
 # Run the all of the doc output profiles and dist module
 #
 dist:
-	@mvn -P dist,pdf,html package
+	@mvn -P dist,pdf,html clean package
 .PHONY: dist
 
 #
@@ -219,7 +219,7 @@ docs:
 .PHONY: docs
 
 #TODO: Put in support for "latest" version uploads
-upload-docs: #docs
+upload-docs: docs
 	@aws s3 sync docs/target/generated-docs/ s3://$(BUCKET_NAME)/$(TEMPLATE_NAME)/latest/docs --only-show-errors --acl public-read --delete
 .PHONY: upload-docs
 
@@ -238,8 +238,18 @@ docker-build:
 #
 # Run the container with all build and deploy artifacts preloaded
 #
-docker-deploy:
+docker-build-app:
 	@docker run -it --rm -w /src \
 		-v ~/.aws:/home/deploy/.aws -v $$(pwd):/src -v ~/.m2:/home/deploy/.m2 \
+		lucee-eb-demo/deploy
+.PHONY: docker-build-app
+
+#
+# Run the container only to deploy artifacts
+#
+docker-deploy:
+	@docker run -it --rm \
+		-w /home/deploy \
+		-v ~/.aws:/home/deploy/.aws \
 		lucee-eb-demo/deploy
 .PHONY: docker-deploy
