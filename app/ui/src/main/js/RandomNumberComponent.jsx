@@ -14,7 +14,7 @@ class RandomNumberComponent extends React.Component {
     }
 
     onRand() {
-        axios.get('/api/index.cfm/rand').then(response => { this.setState({ rand: response.data.rand }); });
+        axios.get('/api/index.cfm/rand?' + new Date().getTime()).then(response => { this.setState({ rand: response.data.rand }); });
     }
 
     render() {

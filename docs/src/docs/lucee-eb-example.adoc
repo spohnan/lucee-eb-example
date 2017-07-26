@@ -21,7 +21,7 @@ To be able to build this application you'll need the following installed locally
 you have Docker installed you could use the `make docker-build` followed by `make docker-deploy` commands
 to use a container with all the tools pre-installed for building or deploying the solution.
 
-* Java - Neither of our apps are written in Java, this is a prerequisite for running Maven
+* Java JDK - Download https://java.com/en/download/manual.jsp[Java JDK] or use a packaged version of OpenJDK for your OS
 * Maven - Builds and packages the application files into executable artifacts
 * Make - The Makefile contains all of the one-liner commands and executes them in the right order
 
@@ -269,6 +269,22 @@ _More volume mounts will be needed if you're building and deploying the solution
 * https://aws.amazon.com/cloudformation/[AWS CloudFormation^]: Deployment orchestration
 * https://aws.amazon.com/elasticbeanstalk/[AWS Elastic Beanstalk^]: Application platform
 * https://sceptre.cloudreach.com[Sceptre]: Deployment orchestration
+
+=== Build on Windows
+
+==== Tool Installs
+
+* https://git-scm.com/[Git^]
+* http://www.oracle.com/technetwork/java/javase/downloads/index.html[Java JDK^]
+* http://gnuwin32.sourceforge.net/packages/make.htm[GNU Make^]
+* Add JDK/bin and Make/bin to PATH
+* https://code.visualstudio.com/[Visual Studio Code^] (or your editor of choice)
+
+==== Steps
+
+* Clone git repo https://github.com/spohnan/lucee-eb-example
+* Open Git Bash terminal
+* Run command `make tomcat-run`
 
 === Documentation Links
 ////

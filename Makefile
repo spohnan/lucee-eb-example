@@ -18,12 +18,16 @@ ifeq ($(AWS_DEFAULT_REGION),)
 AWS_DEFAULT_REGION?=us-east-1
 endif
 
+ifeq ($(MVN),)
+MVN := "./mvnw"
+endif
+
 #
 # By default the most recent Maven project version is used but for the deployment scenario
 # you could set a prior version to deploy ex: "VERSION=1.0.1 make deploy-console"
 #
 ifeq ($(VERSION),)
-VERSION := $(shell mvn -q -Dexec.executable="echo" -Dexec.args='$${project.version}' --non-recursive org.codehaus.mojo:exec-maven-plugin:1.3.1:exec)
+VERSION := $(shell $(MVN) -q -Dexec.executable="echo" -Dexec.args='$${project.version}' --non-recursive org.codehaus.mojo:exec-maven-plugin:1.3.1:exec | sed -n '2p')
 endif
 
 #
@@ -55,7 +59,7 @@ endif
 # Used to set security group rules. Defaults to your specific IP and requires that curl is installed locally
 #
 ifeq ($(ALLOWED_IP_CIDR),)
-ALLOWED_IP_CIDR := $(shell curl -s https://api.ipify.org)/32
+ALLOWED_IP_CIDR := $(shell curl -s http://checkip.amazonaws.com/)/32
 endif
 
 #
@@ -76,6 +80,9 @@ KEY_NAME := $(TEMPLATE_NAME)$(DEV_RELEASE)/$(VERSION)
 # Pass all the common args to every sceptre call to simplify
 #
 SCEPTRE_ARGS := --var "bucket_name=$(BUCKET_NAME)" --var "key_name=$(KEY_NAME)" --var "version=$(VERSION)" --var "allowed_ip_cidr=$(ALLOWED_IP_CIDR)" --dir "cloudformation"
+
+version:
+	@echo $(VERSION)
 
 help:
 	@echo ""
@@ -118,7 +125,7 @@ init:
 # All temporary files are stored within each module's target/ directory. Remove them all
 #
 clean:
-	@mvn clean
+	@$(MVN) clean
 .PHONY: clean
 
 #
@@ -126,15 +133,15 @@ clean:
 # https://maven.apache.org/guides/introduction/introduction-to-the-lifecycle.html
 #
 package: clean
-	@mvn package
+	@$(MVN) package
 .PHONY: package
 
 #
 # During development you can build and deploy to a local Tomcat instance of the same version as used by Beanstalk
 #
 tomcat-run:
-	@mvn install
-	@mvn --projects build/tomcat cargo:run
+	@$(MVN) install
+	@$(MVN) --projects build/tomcat cargo:run
 .PHONY: tomcat-run
 
 #
@@ -208,14 +215,15 @@ validate: sceptre-exists
 # Run the all of the doc output profiles and dist module
 #
 dist:
-	@mvn -P dist,pdf,html clean package
+	@$(MVN) -P dist,pdf,html clean package
 .PHONY: dist
 
 #
 # Activate all the output format profiles for the docs module
 #
 docs:
-	@mvn -P pdf,html -pl docs
+	@$(MVN) -P pdf,html -pl docs
+	@$(MVN) -P pdf,html -pl docs
 .PHONY: docs
 
 #TODO: Put in support for "latest" version uploads
