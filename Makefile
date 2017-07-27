@@ -222,8 +222,8 @@ dist:
 # Activate all the output format profiles for the docs module
 #
 docs:
-	@$(MVN) -P pdf,html -pl docs
-	@$(MVN) -P pdf,html -pl docs
+	@$(MVN) -P pdf,html -pl docs package
+	@$(MVN) -P pdf,html -pl docs package
 .PHONY: docs
 
 #TODO: Put in support for "latest" version uploads
