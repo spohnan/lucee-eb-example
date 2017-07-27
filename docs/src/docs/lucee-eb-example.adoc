@@ -10,8 +10,8 @@ endif::backend-html5[]
 
 == Overview
 
-This project demonstrates an automated process that can build multiple applications, deploy them to Elastic Beanstalk,
-update them without user facing outages and all in a completely automated manner.
+This project demonstrates an automated process that can build multiple applications, deploy them to Elastic Beanstalk and
+update them without user facing outages.
 
 == Build/Packaging Quick Start
 
@@ -19,10 +19,11 @@ update them without user facing outages and all in a completely automated manner
 
 To be able to build this application you'll need the following installed locally. Optionally, if
 you have Docker installed you could use the `make docker-build` followed by `make docker-deploy` commands
-to use a container with all the tools pre-installed for building or deploying the solution.
+to use a container with all the tools pre-installed for building or deploying the solution. There are
+also instructions on how to <<Build on Windows>> available.
 
+* https://git-scm.com/[Git^] - Download the git source code management system or use a packaged version for your OS
 * Java JDK - Download https://java.com/en/download/manual.jsp[Java JDK] or use a packaged version of OpenJDK for your OS
-* Maven - Builds and packages the application files into executable artifacts
 * Make - The Makefile contains all of the one-liner commands and executes them in the right order
 
 === Steps
